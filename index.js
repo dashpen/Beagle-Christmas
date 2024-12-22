@@ -392,12 +392,20 @@ function checkTreats(){
     }
 }
 
+function rotateTreats(){
+    for(let i = 0; i < treats.length; i++){
+        treats[i].rotation.y += Math.sin(Date.now()/1000) * 0.01
+        treats[i].position.y += Math.sin(Date.now()/500) * 0.01
+    }
+}
+
 function render(time){
     // render loop
     coyoteFrames()
-    forces(6)
+    forces(time - time2)
     checkPlatform()
     checkTreats()
+    rotateTreats()
     count++
     // fps stuff
     console.log(isJumping);
