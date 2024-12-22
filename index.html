@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <style>
+            body {
+                margin: 0;
+                /* overscroll-behavior: none; */
+            }
+            #blocker{
+                height:100%; 
+                width: 100%; 
+                position:absolute;
+                background-color: rgba(0,0,0,0.5);
+            }
+            #crosshair{
+                height:100%; 
+                width: 100%; 
+                display:none;
+                position:absolute;
+            }
+            #infoText{
+                height:100%; 
+                width: 100%; 
+                display:none;
+                position:absolute;
+            }
+            #blockerText{
+                height: 100%; 
+                width: 100%;
+
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+
+                color:white;
+
+				text-align: center;
+				font-size: 14px;
+				cursor: pointer;
+            }
+            #winscreen{
+                height:100%; 
+                width: 100%; 
+
+                display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+
+                color:white;
+
+                display:none;
+                position:absolute;
+
+                text-align: center;
+                font-size: 24px;
+				cursor: pointer;
+            }
+            .helpText{
+                text-align: center; 
+                color: white; 
+                height:33%; 
+                font-size: 7.5cqh;
+                display: none;
+            }
+            body {
+                overflow: hidden;
+                margin: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="blocker">
+            <div id="blockerText">
+                <p>Paused</p> <br>
+                <p>Movement is WASD</p> <br>
+                <p>Use 'e' to pickup items</p> <br>
+                <p>Your goal is to escape the room as quickly as possible</p> <br>
+                <p>Click to play!</p>
+            </div>
+
+        </div>
+        <div id="winscreen">
+            <p>You Died! Congratulations!</p>
+            <br>
+            <p>play again?</p>
+            <br>
+            <p id="time">Your Time Was</p>
+        </div>
+        <canvas id="crosshair" height="100%" width="100%"></canvas>
+        <div id="infoText">
+            <div style="height:70%">
+
+            </div>
+            <div style="height: 30%; container-type:size">
+                <p id="lockpickHelp" class="helpText">Press 'C' to craft a lockpick!</p>
+                <p id="unlockDoorHelp" class="helpText">Press 'f' to unlock the door!</p>
+                <p id="lockedDoorHelp" class="helpText">You got a lockpick!</p>
+            </div>
+        </div>
+    </body>
+</html>
+<script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.159/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.159/examples/jsm/"
+      }
+    }
+</script>
+<script src="index.js" type="module"></script>
