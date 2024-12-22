@@ -6,13 +6,17 @@ const frameRate = 165
 const startingCameraHeight = 0.4
 let curCameraHeight = startingCameraHeight
 const startingRunSpeed = 0.05
-const maxSpeed = 1
+const maxSpeed = 2
 const gravity = 4.9
+let isSneaking = false
+let isSprinting = false
 
 let movingForward = false
 let movingBackward = false
 let movingLeft = false
 let movingRight = false
+
+let hasSecondJump = false;
 
 let windowWidth = window.innerWidth
 let windowHeight = window.innerHeight
@@ -37,10 +41,10 @@ const floorGeo = new THREE.PlaneGeometry(1000, 1000)
 const floorMat = new THREE.MeshPhongMaterial({color: 0x808080})
 const floor = new THREE.Mesh(floorGeo, floorMat)
 
-const box = new THREE.Mesh(new THREE.BoxGeometry(10, 2, 10), new THREE.MeshBasicMaterial({color: 0xff0000}))
-box.position.y = 1
-box.position.z = 4
-scene.add(box)
+// const box = new THREE.Mesh(new THREE.BoxGeometry(10, 2, 10), new THREE.MeshBasicMaterial({color: 0xff0000}))
+// box.position.y = 1
+// box.position.z = 4
+// scene.add(box)
 
 floor.rotateX(-Math.PI/2)
 
@@ -101,15 +105,20 @@ const loader = new GLTFLoader()
 const loadedObjs = []
 let loaded = 0
 let hasWonYet = false
+const seed = 1
+const platforms = [floor]
+const treats = []
 function loadModel(name){
     loader.load(`models/${name}.glb`, (gltf) => {
-        scene.add(gltf.scene)
-        loadedObjs.push(gltf.scene)
-        loaded++
-        if(loaded === 4){
-            loaded = 0
-            init()
-        }
+        // scene.add(gltf.scene.children[0])
+        console.log(gltf.scene.children[0]);
+        loadedObjs.push(gltf.scene.children[0])
+        // loaded++
+        // if(loaded === 4){
+        //     loaded = 0
+        //     init()
+        // }
+        genPlatforms(gltf.scene.children[0])
     },
     (xhr) => {
         console.log(( xhr.loaded / xhr.total * 100 ) + '% loaded');
@@ -121,7 +130,61 @@ function loadModel(name){
     )
 }
 
+loadModel("dogtreat")
+// setTimeout(() => {
+// console.log(loadedObjs);
+// }, 1000)
+// scene.add(loadedObjs[0])
+// loadedObjs[0].position.set(0, 4, 0)
 
+function genPlatforms(dogTreat){
+    console.log(dogTreat);
+    const platformGeo = new THREE.BoxGeometry(20, 4, 20).toNonIndexed()
+    const colorsBox = [];
+
+    const color = new THREE.Color();
+    let flipper = false;
+    console.log(platformGeo.attributes.position.count);
+    for (let i = 0; i < platformGeo.attributes.position.count; i ++) {
+    
+        if(i % 3 === 0){
+            flipper = !flipper
+        }
+        // if(i % 12 === 0){
+        //     flipper = !flipper
+        // }
+        color.setRGB(Number(flipper), 1 - Number(flipper), 0 );
+        colorsBox.push(color.r, color.g, color.b);
+    
+    }
+
+    platformGeo.setAttribute( 'color', new THREE.Float32BufferAttribute( colorsBox, 3 ) );
+    // const platform = new THREE.Mesh(platformGeo, new THREE.MeshPhongMaterial({specular: 0xffffff, flatShading: true, vertexColors: true}))
+    //generate platforms
+
+    for(let i = 0; i < 50; i++){
+        const platform = new THREE.Mesh(platformGeo, new THREE.MeshPhongMaterial({specular: 0xffffff, flatShading: true, vertexColors: true}))
+        platform.position.set(Math.random(seed)*100 - 50, Math.random(seed)*100 - 50, Math.random(seed)*100 - 50)
+        const boxA = new THREE.Box3().setFromObject(platform)
+        for(let j = 0; j < i + 1; j++){
+            const boxB = new THREE.Box3().setFromObject(platforms[j])
+            if(boxA.intersectsBox(boxB)){
+                platform.position.set(Math.random(seed)*100 - 50, Math.random(seed)*100 - 50, Math.random(seed)*100 - 50)
+                boxA.setFromObject(platform)
+                j = 0
+            }
+        }
+        scene.add(platform)
+        platforms.push(platform)
+        
+        const treat = new THREE.Mesh(dogTreat.geometry, dogTreat.material)
+        treat.position.set(platform.position.x, platform.position.y + 4, platform.position.z)
+        treat.setRotationFromEuler(new THREE.Euler(0, Math.random(seed)*Math.PI*2, 0))
+        treats.push(treat)
+        scene.add(treat)
+    }
+    init();
+}
 function raycastTesting(){
     raycaster.setFromCamera({x: 0, y: 0}, camera)
     const intersectedObjects = raycaster.intersectObject(scene)
@@ -135,35 +198,8 @@ function raycastTesting(){
         console.log(position)
     }
 }
-const platformGeo = new THREE.BoxGeometry(20, 2, 20).toNonIndexed()
-const colorsBox = [];
 
-{
-    const color = new THREE.Color();
-    let flipper = false;
-    console.log(platformGeo.attributes.position.count);
-    for (let i = 0; i < platformGeo.attributes.position.count; i ++) {
-    
-        // if(i % 3 === 0){
-        //     flipper = !flipper
-        // }
-        if(i % 12 === 0){
-            flipper = !flipper
-        }
-        // if(i % 6 === 0){
-        //     flipper = !flipper
-        // }
-        color.setRGB(Number(flipper), 1 - Number(flipper), 0 );
-        colorsBox.push(color.r, color.g, color.b);
-    
-    }
-}
 
-platformGeo.setAttribute( 'color', new THREE.Float32BufferAttribute( colorsBox, 3 ) );
-const platform = new THREE.Mesh(platformGeo, new THREE.MeshPhongMaterial({specular: 0xffffff, flatShading: true, vertexColors: true}))
-platform.position.y = 4
-// box.position.z = 0
-scene.add(platform)
 
 const winscreen = document.getElementById("winscreen")
 const timerText = document.getElementById("time")
@@ -244,7 +280,7 @@ function groundCheck(){
         return false
     }
     // console.log(intersects[0].distance);
-    return intersects[0].distance <= curCameraHeight
+    return intersects[0].distance <= curCameraHeight + 0.05
 }
 
 function isGrounded(){
@@ -274,8 +310,7 @@ function jumpCut(){
 let totalVelocity = new THREE.Vector3(0, 0, 0)
 
 let neg = false
-
-function forces(deltaTime){
+function move(deltaTime){
     const accel = runSpeed * 24 * deltaTime/1000
     const airAccel = accel * 0.5
     let fwdSpeed = 0
@@ -306,14 +341,19 @@ function forces(deltaTime){
     if(Math.abs(sideSpeed) < 0.01) sideSpeed = 0
     controls.moveForward(fwdSpeed)
     controls.moveRight(sideSpeed)
-
+}
+function forces(deltaTime){
+    move(deltaTime)
     // gravity
     if(!isGrounded()){
         totalVelocity.y -= totalVelocity.y < 0 ? gravity * deltaTime/1000 : gravity * 0.5 * deltaTime/1000
     }
     
     controls.getObject().position.set(controls.getObject().position.x + totalVelocity.x, controls.getObject().position.y + totalVelocity.y, controls.getObject().position.z + totalVelocity.z)
-
+    if(controls.getObject().position.y < -100){
+        controls.getObject().position.y = curCameraHeight
+        totalVelocity.y = 0
+    }
 }
 
 function checkPlatform(){
@@ -340,10 +380,11 @@ function checkPlatform(){
 function render(time){
     // render loop
     coyoteFrames()
-    forces(time-time2)
+    forces(6)
     checkPlatform()
     count++
     // fps stuff
+    console.log(isJumping);
     renderer.render(scene, camera)
     const diff = time - time2
     if(count === 60){
@@ -361,7 +402,6 @@ setInterval(() => {
     // console.log("frames",count);
     count = 0
 }, 1000)
-init()
 // key stuff
 
 document.addEventListener("keydown", (event) => {
@@ -369,6 +409,9 @@ document.addEventListener("keydown", (event) => {
     const key = event.key
     event.preventDefault()
     // console.log(event.key)
+    if (event.ctrlKey && event.key === 'w') {
+        event.preventDefault();
+    }
     switch (key.toLowerCase()) {
         case 'w':
             movingForward = true
@@ -388,6 +431,9 @@ document.addEventListener("keydown", (event) => {
         case 'shift':
             enterSneak()
             break;
+        case 'control':
+            enterSprint()
+            break;
     } 
 })
 
@@ -396,6 +442,10 @@ document.addEventListener('pointerlockchange', () => {
         // if()
     }
 });
+
+document.addEventListener('beforeunload', () => {
+    return "you sure?"
+})
 
 document.addEventListener("keyup", (event) => {
     event.isComposing ? console.log("composing") : ""
@@ -421,19 +471,36 @@ document.addEventListener("keyup", (event) => {
         case 'shift':
             exitSneak()
             break;
+        case 'control':
+            exitSprint()
+            break;
     }
 })
 
 function enterSneak(){
+    if(isSneaking) return
     controls.getObject().position.y -= curCameraHeight/2
     curCameraHeight -= curCameraHeight/2
     runSpeed = maxSpeed/4
+    isSneaking = true
 }
 
 function exitSneak(){
     controls.getObject().position.y += curCameraHeight/2
     curCameraHeight += curCameraHeight/2
     runSpeed = maxSpeed
+    isSneaking = false
+}
+
+function enterSprint(){
+    if(isSprinting) return
+    runSpeed = maxSpeed * 2
+    isSprinting = true
+}
+
+function exitSprint(){
+    runSpeed = maxSpeed
+    isSprinting = false
 }
 
 // crosshair creation code
