@@ -17,6 +17,7 @@ let movingLeft = false
 let movingRight = false
 
 let hasSecondJump = false;
+let score = 0
 
 let windowWidth = window.innerWidth
 let windowHeight = window.innerHeight
@@ -376,12 +377,27 @@ function checkPlatform(){
         isJumping = false
     }
 }
+let scoreText = document.getElementById("score")
+function checkTreats(){
+    for(let i = 0; i < treats.length; i++){
+        const treat = treats[i]
+        if(treat.position.distanceTo(controls.getObject().position) < 5){
+            console.log(scoreText);
+            scene.remove(treat)
+            treats.splice(i, 1)
+            score++
+            console.log(score, scoreText.innerHTML);
+            scoreText.innerHTML = `Score: ${score}`
+        }
+    }
+}
 
 function render(time){
     // render loop
     coyoteFrames()
     forces(6)
     checkPlatform()
+    checkTreats()
     count++
     // fps stuff
     console.log(isJumping);
