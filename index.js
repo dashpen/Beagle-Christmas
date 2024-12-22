@@ -135,6 +135,35 @@ function raycastTesting(){
         console.log(position)
     }
 }
+const platformGeo = new THREE.BoxGeometry(20, 2, 20).toNonIndexed()
+const colorsBox = [];
+
+{
+    const color = new THREE.Color();
+    let flipper = false;
+    console.log(platformGeo.attributes.position.count);
+    for (let i = 0; i < platformGeo.attributes.position.count; i ++) {
+    
+        // if(i % 3 === 0){
+        //     flipper = !flipper
+        // }
+        if(i % 12 === 0){
+            flipper = !flipper
+        }
+        // if(i % 6 === 0){
+        //     flipper = !flipper
+        // }
+        color.setRGB(Number(flipper), 1 - Number(flipper), 0 );
+        colorsBox.push(color.r, color.g, color.b);
+    
+    }
+}
+
+platformGeo.setAttribute( 'color', new THREE.Float32BufferAttribute( colorsBox, 3 ) );
+const platform = new THREE.Mesh(platformGeo, new THREE.MeshPhongMaterial({specular: 0xffffff, flatShading: true, vertexColors: true}))
+platform.position.y = 4
+// box.position.z = 0
+scene.add(platform)
 
 const winscreen = document.getElementById("winscreen")
 const timerText = document.getElementById("time")
